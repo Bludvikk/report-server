@@ -57,6 +57,19 @@ namespace ReportServer.Data {
                 };
                 SqlDataConnections.Add(newData);
             }
+
+            var SqlServerDataConnectionName = "GatewayConnectionString";
+            if(!SqlDataConnections.Any(x => x.Name == SqlServerDataConnectionName))
+            {
+                var newData = new SqlDataConnectionDescription
+                {
+                    Name = SqlServerDataConnectionName,
+                    DisplayName = "Gateway Sql Server Connection",
+                    ConnectionString = "XpoProvider=MSSqlServer;Data Source=LAPTOP-F6PCCLT5\\SQL2022;User ID=sa;Password=@Test123;Initial Catalog=gateway_new;Persist Security Info=true;",
+
+                };
+                SqlDataConnections.Add(newData);
+            }
             SaveChanges();
         }
     }

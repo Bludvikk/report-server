@@ -51,6 +51,7 @@ namespace ReportServer {
                 configurator.UseAsyncEngine();
             });
             services.AddDbContext<ReportDbContext>(options => options.UseSqlite(Configuration.GetConnectionString("ReportsDataConnectionString")));
+            services.AddDbContext<ReportDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("GatewayConnectionString")));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
