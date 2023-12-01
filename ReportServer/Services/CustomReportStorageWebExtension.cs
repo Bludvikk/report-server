@@ -6,18 +6,21 @@ using ReportServer.PredefinedReports;
 using ReportServer.Data;
 using DevExpress.XtraReports;
 using DevExpress.XtraReports.Web.Extensions;
+using System.Web;
+using System;
+using System.Diagnostics;
 
 namespace ReportServer.Services
 {
     public class CustomReportStorageWebExtension : ReportStorageWebExtension
     {
+        public string reportDirectory = "C:\\Users\\bgcor\\OneDrive\\Desktop\\ReportDir\\";
+
 
         public Dictionary<string, XtraReport> Reports = new Dictionary<string, XtraReport>();
         protected ReportDbContext DbContext { get; set; }
         public CustomReportStorageWebExtension(ReportDbContext dbContext) {
             this.DbContext = dbContext;
-
-            string reportDirectory = "C:\\Users\\bgcor\\OneDrive\\Desktop\\ReportDir\\";
 
             string[] files = Directory.GetFiles(reportDirectory);
 
@@ -51,24 +54,30 @@ namespace ReportServer.Services
 
         public override byte[] GetData(string url)
         {
-            //var parts = url.Split('?');
-            //var reportName = parts[0];
-            //
-            //Debug.WriteLine("BusinessCode: " + url);
+            var parts = url.Split('?');
+            var reportName = parts[0];
+            var parameter = parts.Length > 1 ? parts[1] : null;
 
-            if (Reports.TryGetValue(url, out XtraReport report))
+            Debug.WriteLine("params", parameter);
+
+            if (Reports.TryGetValue(reportName, out XtraReport report))
             {
                 using (MemoryStream stream = new MemoryStream())
                 {
-
-                    report.RequestParameters = false;
+                    if (parameter != null)
+                    {
+                        var parameters = HttpUtility.ParseQueryString(parameter);
+                        var paramValue = parameters.Get("Business");
+                        report.RequestParameters = false;
+                        report.Parameters["Business"].Value = paramValue;
+                    }
                     report.SaveLayoutToXml(stream);
                     return stream.ToArray();
                 }
             }
             else
             {
-                return null;
+                return null; // or return new byte[0];
             }
         }
 
@@ -88,7 +97,7 @@ namespace ReportServer.Services
                 Reports.Add(url, report);
             }
 
-            using (FileStream stream = new FileStream("C:\\Users\\bgcor\\OneDrive\\Desktop\\ReportDir\\" + url + ".resx", FileMode.Create))
+            using (FileStream stream = new FileStream(reportDirectory + url + ".resx", FileMode.Create))
             {
                 report.SaveLayoutToXml(stream);
             }
@@ -98,7 +107,7 @@ namespace ReportServer.Services
         {
             SetData(report, defaultUrl);
 
-            using (FileStream stream = new FileStream("C:\\Users\\bgcor\\OneDrive\\Desktop\\ReportDir\\" + defaultUrl + ".resx", FileMode.Create))
+            using (FileStream stream = new FileStream(reportDirectory + defaultUrl + ".resx", FileMode.Create))
             {
                 report.SaveLayoutToXml(stream);
             }
