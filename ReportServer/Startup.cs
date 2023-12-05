@@ -48,7 +48,7 @@ namespace ReportServer
             {
                 configurator.ConfigureReportDesigner(designerConfigurator =>
                 {
-            
+
                     designerConfigurator.RegisterDataSourceWizardConnectionStringsProvider<CustomSqlDataSourceWizardConnectionStringsProvider>();
                     designerConfigurator.RegisterDataSourceWizardJsonConnectionStorage<CustomDataSourceWizardJsonDataConnectionStorage>(true);
                 });

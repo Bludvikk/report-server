@@ -9,6 +9,9 @@ using DevExpress.XtraReports.Web.Extensions;
 using System.Web;
 using System;
 using System.Diagnostics;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Policy;
+using Microsoft.Extensions.Configuration;
 
 namespace ReportServer.Services
 {
@@ -16,15 +19,20 @@ namespace ReportServer.Services
     {
         public string reportDirectory = "C:\\Users\\bgcor\\OneDrive\\Desktop\\ReportDir\\";
 
+        private readonly IConfiguration _configuration;
+        private readonly ReportDbContext _dbContext;
 
         public Dictionary<string, XtraReport> Reports = new Dictionary<string, XtraReport>();
         protected ReportDbContext DbContext { get; set; }
-        public CustomReportStorageWebExtension(ReportDbContext dbContext) {
+        public CustomReportStorageWebExtension(ReportDbContext dbContext, IConfiguration configuration)
+        {
             this.DbContext = dbContext;
+            this._configuration = configuration;
+
 
             string[] files = Directory.GetFiles(reportDirectory);
 
-            foreach(var file in files)
+            foreach (var file in files)
             {
                 string url = Path.GetFileNameWithoutExtension(file);
                 XtraReport report = XtraReport.FromFile(file, true);
@@ -33,9 +41,10 @@ namespace ReportServer.Services
             }
         }
 
-        
 
-        public override bool CanSetData(string url) {
+
+        public override bool CanSetData(string url)
+        {
             // Determines whether a report with the specified URL can be saved.
             // Add custom logic that returns **false** for reports that should be read-only.
             // Return **true** if no valdation is required.
@@ -44,7 +53,8 @@ namespace ReportServer.Services
             return true;
         }
 
-        public override bool IsValidUrl(string url) {
+        public override bool IsValidUrl(string url)
+        {
             // Determines whether the URL passed to the current report storage is valid.
             // Implement your own logic to prohibit URLs that contain spaces or other specific characters.
             // Return **true** if no validation is required.
@@ -101,6 +111,8 @@ namespace ReportServer.Services
             {
                 report.SaveLayoutToXml(stream);
             }
+            SaveReportNamesToDatabase(url);
+
         }
 
         public override string SetNewData(XtraReport report, string defaultUrl)
@@ -112,7 +124,32 @@ namespace ReportServer.Services
                 report.SaveLayoutToXml(stream);
             }
 
+            
+
             return defaultUrl;
+        }
+
+        public void SaveReportNamesToDatabase(string reportName)
+        {
+            var newFormat = reportName.Replace("-", " ");
+
+            var optionsBuilder = new DbContextOptionsBuilder<ReportDbContext>();
+            optionsBuilder.UseSqlServer(_configuration.GetConnectionString("GatewayConnectionString"));
+
+            using (var context = new ReportDbContext(optionsBuilder.Options))
+            {
+                var newReport = new Report
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Name = newFormat,
+                    ReportName = reportName,
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now,
+                };
+
+                context.Report.Add(newReport);
+                context.SaveChanges();
+            }
         }
     }
 }

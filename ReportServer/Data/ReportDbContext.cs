@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Microsoft.EntityFrameworkCore;
 
 namespace ReportServer.Data
@@ -13,6 +14,19 @@ namespace ReportServer.Data
         public string ConnectionString { get; set; }
     }
 
+    public class Report
+    {
+
+        public string Id { get; set; } = Guid.NewGuid().ToString();
+        public string Name { get; set; }
+        public string ReportName { get; set; }
+
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime UpdatedAt { get; set;}
+
+    }
+
+
     public class ReportItem
     {
         public int Id { get; set; }
@@ -23,6 +37,7 @@ namespace ReportServer.Data
 
     public class ReportDbContext : DbContext
     {
+        public DbSet<Report> Report { get; set; }
         public DbSet<JsonDataConnectionDescription> JsonDataConnections { get; set; }
         public DbSet<SqlDataConnectionDescription> SqlDataConnections { get; set; }
         public DbSet<ReportItem> Reports { get; set; }
